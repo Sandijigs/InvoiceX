@@ -1,0 +1,79 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+solc_version = "0.8.20"
+evm_version = "shanghai"
+optimizer = true
+optimizer_runs = 200
+via_ir = true
+
+# Gas reporting
+gas_reports = ["*"]
+gas_reports_ignore = ["test/**/*"]
+
+# Additional settings
+fs_permissions = [{ access = "read-write", path = "./"}]
+ffi = false
+verbosity = 3
+
+# Test configuration
+[profile.default.fuzz]
+runs = 256
+max_test_rejects = 65536
+seed = '0x3e8'
+
+[profile.default.invariant]
+runs = 256
+depth = 15
+fail_on_revert = false
+
+# Mantle Network Configuration
+[rpc_endpoints]
+mantle = "https://rpc.mantle.xyz"
+mantle_testnet = "https://rpc.testnet.mantle.xyz"
+
+[etherscan]
+mantle = { key = "${ETHERSCAN_API_KEY}", url = "https://explorer.mantle.xyz/api" }
+mantle_testnet = { key = "${ETHERSCAN_API_KEY}", url = "https://explorer.testnet.mantle.xyz/api" }
+
+# CI Profile - faster builds, less optimization
+[profile.ci]
+fuzz = { runs = 1000 }
+invariant = { runs = 100 }
+verbosity = 4
+
+# Local Profile - for development
+[profile.local]
+fuzz = { runs = 128 }
+optimizer_runs = 200
+verbosity = 3
+
+# Production Profile - maximum optimization
+[profile.production]
+optimizer = true
+optimizer_runs = 1000000
+via_ir = true
+verbosity = 2
+
+# Test coverage
+[profile.coverage]
+fuzz = { runs = 10 }
+verbosity = 1
+
+# Formatter
+[fmt]
+line_length = 120
+tab_width = 4
+bracket_spacing = true
+int_types = "long"
+multiline_func_header = "attributes_first"
+quote_style = "double"
+number_underscore = "thousands"
+wrap_comments = true
+
+# Documentation
+[doc]
+out = "docs"
+repository = "https://github.com/invoicex/invoicex"
+ignore = ["**/*.t.sol"]

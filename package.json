@@ -1,0 +1,46 @@
+{
+  "name": "invoicex",
+  "version": "1.0.0",
+  "description": "InvoiceX - Get paid TODAY for invoices due in 90 days. A DeFi invoice factoring protocol on Mantle Network.",
+  "main": "index.js",
+  "scripts": {
+    "build": "forge build",
+    "compile": "forge build",
+    "test": "forge test -vvv",
+    "test:gas": "forge test --gas-report",
+    "test:coverage": "forge coverage",
+    "test:coverage:report": "forge coverage --report lcov && genhtml lcov.info -o coverage",
+    "clean": "forge clean",
+    "snapshot": "forge snapshot",
+    "fmt": "forge fmt",
+    "fmt:check": "forge fmt --check",
+    "deploy:testnet": "forge script script/Deploy.s.sol:DeployScript --rpc-url mantle_testnet --broadcast --verify -vvvv",
+    "deploy:mainnet": "forge script script/Deploy.s.sol:DeployScript --rpc-url mantle --broadcast --verify -vvvv",
+    "deploy:local": "forge script script/Deploy.s.sol:DeployScript --rpc-url localhost --broadcast -vvvv",
+    "anvil": "anvil --fork-url ${MANTLE_RPC_URL:-https://rpc.testnet.mantle.xyz}",
+    "verify": "forge verify-contract",
+    "size": "forge build --sizes",
+    "inspect": "forge inspect"
+  },
+  "keywords": [
+    "defi",
+    "rwa",
+    "invoice",
+    "factoring",
+    "mantle",
+    "blockchain",
+    "ethereum",
+    "layer2",
+    "ai",
+    "zk-proof",
+    "foundry",
+    "solidity"
+  ],
+  "author": "InvoiceX Team",
+  "license": "MIT",
+  "devDependencies": {
+    "dotenv": "^16.3.1",
+    "prettier": "^3.1.0",
+    "prettier-plugin-solidity": "^1.2.0"
+  }
+}
