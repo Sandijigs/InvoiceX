@@ -60,4 +60,6 @@ interface IInvoiceToken {
     ) external returns (uint256 invoiceId);
 
     function getInvoice(uint256 invoiceId) external view returns (InvoiceData memory);
+
+    function updateStatus(uint256 invoiceId, InvoiceStatus newStatus) external;
 }
