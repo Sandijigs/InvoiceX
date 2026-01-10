@@ -19,10 +19,13 @@ typechain-types/
 
 # Environment variables
 .env
+.env.*
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+.env.mantle-testnet
+.env.testnet
 
 # Logs
 npm-debug.log*
@@ -59,6 +62,13 @@ flattened/
 docs/_build/
 docs/.docusaurus/
 
+# Markdown files (except README)
+*.md
+!README.md
+!frontend/README.md
+!backend/README.md
+!contracts/README.md
+
 # Frontend
 frontend/node_modules/
 frontend/.next/
@@ -74,3 +84,7 @@ backend/dist/
 .prettierignore
 *.orig
 .vercel
+
+# Scripts
+*.sh
+!foundry.sh

@@ -15,6 +15,7 @@ import "../src/core/YieldDistributor.sol";
 import "../src/defi/InsurancePool.sol";
 import "../src/defi/InvoiceMarketplace.sol";
 import "../src/core/InvoiceXCore.sol";
+import "../test/mocks/MockUSDT.sol";
 
 /**
  * @title DeployInvoiceX
@@ -60,6 +61,13 @@ contract DeployInvoiceX is Script {
         if (block.chainid == 31337 || block.chainid == 5003) {
             // Local or Mantle Sepolia - deploy mock USDT
             console.log("Deploying mock USDT for testing...");
+            MockUSDT mockUsdt = new MockUSDT();
+            stablecoin = address(mockUsdt);
+            console.log("Mock USDT deployed at:", stablecoin);
+
+            // Mint some USDT to the deployer for testing
+            mockUsdt.mint(deployer, 1_000_000 * 1e6); // 1M USDT
+            console.log("Minted 1,000,000 USDT to deployer");
         } else {
             stablecoin = vm.envAddress("STABLECOIN_ADDRESS");
         }
