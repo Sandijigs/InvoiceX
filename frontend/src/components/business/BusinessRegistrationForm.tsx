@@ -56,6 +56,11 @@ export function BusinessRegistrationForm() {
       // For now, we'll use a JSON string as the URI
       const businessURI = JSON.stringify(businessMetadata)
 
+      console.log('Submitting business registration:', {
+        businessHash,
+        businessURI: businessMetadata
+      })
+
       await registerBusiness(businessHash, businessURI)
     } catch (error) {
       console.error('Registration failed:', error)
@@ -162,9 +167,15 @@ export function BusinessRegistrationForm() {
 
           {registerError && (
             <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm font-semibold text-red-900 mb-2">Registration Error</p>
               <p className="text-sm text-red-800">
                 {registerError.message || 'Registration failed. Please try again.'}
               </p>
+              {registerError.message?.includes('timeout') && (
+                <p className="text-xs text-red-700 mt-2">
+                  The transaction took too long to confirm. Please check your wallet and the block explorer to see if the transaction went through.
+                </p>
+              )}
             </div>
           )}
 

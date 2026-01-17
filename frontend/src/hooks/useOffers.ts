@@ -40,7 +40,7 @@ export function useOffers(offerId?: bigint) {
     : null
 
   // Write contract hook
-  const { writeContract, data: hash, isPending } = useWriteContract()
+  const { writeContract, data: hash, isPending: isWritePending } = useWriteContract()
 
   // Wait for transaction
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({

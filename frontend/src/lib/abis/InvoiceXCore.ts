@@ -3,14 +3,14 @@ export const INVOICE_X_CORE_ABI = [
     "type": "function",
     "name": "submitInvoice",
     "inputs": [
-      { "name": "invoiceNumber", "type": "string", "internalType": "string" },
-      { "name": "buyer", "type": "address", "internalType": "address" },
-      { "name": "amount", "type": "uint256", "internalType": "uint256" },
+      { "name": "buyerHash", "type": "bytes32", "internalType": "bytes32" },
+      { "name": "faceValue", "type": "uint256", "internalType": "uint256" },
       { "name": "dueDate", "type": "uint256", "internalType": "uint256" },
-      { "name": "ipfsHash", "type": "string", "internalType": "string" }
+      { "name": "documentHash", "type": "bytes32", "internalType": "bytes32" },
+      { "name": "invoiceNumber", "type": "string", "internalType": "string" }
     ],
     "outputs": [
-      { "name": "tokenId", "type": "uint256", "internalType": "uint256" }
+      { "name": "requestId", "type": "uint256", "internalType": "uint256" }
     ],
     "stateMutability": "nonpayable"
   },

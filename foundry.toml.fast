@@ -1,0 +1,16 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+solc_version = "0.8.20"
+evm_version = "paris"
+optimizer = true
+optimizer_runs = 200
+via_ir = false  # Disabled for faster compilation
+fs_permissions = [{ access = "read-write", path = "./"}]
+
+[rpc_endpoints]
+mantle_sepolia = "https://rpc.sepolia.mantle.xyz"
+
+[etherscan]
+mantle_sepolia = { key = "", url = "https://explorer.sepolia.mantle.xyz/api" }

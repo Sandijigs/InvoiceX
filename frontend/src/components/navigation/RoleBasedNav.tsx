@@ -2,46 +2,49 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useUserRole } from '@/hooks/useUserRole'
-import { Building2, TrendingUp, Users } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
+import { Building2, TrendingUp, Shield, ShoppingBag } from 'lucide-react'
 
 export function RoleBasedNav() {
   const pathname = usePathname()
-  const { role, isBusiness, isInvestor, isLoading } = useUserRole()
 
+  // Simple static navigation - always show all links
+  // Role badges and admin visibility can be added later after testing basic navigation
   const navItems = [
     {
       href: '/business',
       label: 'Business',
       icon: Building2,
-      show: true,
       isActive: pathname?.startsWith('/business'),
-      badge: isBusiness ? 'active' : null,
     },
     {
       href: '/investor',
       label: 'Investor',
       icon: TrendingUp,
-      show: true,
       isActive: pathname?.startsWith('/investor'),
-      badge: isInvestor ? 'active' : null,
     },
     {
       href: '/marketplace',
       label: 'Marketplace',
-      icon: Users,
-      show: true,
-      isActive: pathname === '/marketplace',
-      badge: null,
+      icon: ShoppingBag,
+      isActive: pathname?.startsWith('/marketplace'),
+    },
+    {
+      href: '/insurance',
+      label: 'Insurance',
+      icon: Shield,
+      isActive: pathname?.startsWith('/insurance'),
+    },
+    {
+      href: '/admin',
+      label: 'Admin',
+      icon: Shield,
+      isActive: pathname?.startsWith('/admin'),
     },
   ]
 
   return (
-    <div className="hidden md:flex items-center space-x-1">
+    <nav className="hidden md:flex items-center space-x-1">
       {navItems.map((item) => {
-        if (!item.show) return null
-
         const Icon = item.icon
         const isActive = item.isActive
 
@@ -60,17 +63,12 @@ export function RoleBasedNav() {
           >
             <Icon className="w-4 h-4" />
             <span>{item.label}</span>
-            {item.badge && !isLoading && (
-              <Badge className="ml-1 h-5 px-1.5 text-[10px] bg-emerald-500 text-white border-none">
-                {item.badge}
-              </Badge>
-            )}
             {isActive && (
               <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500 to-teal-600"></div>
             )}
           </Link>
         )
       })}
-    </div>
+    </nav>
   )
 }

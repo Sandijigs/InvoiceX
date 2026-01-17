@@ -2,13 +2,24 @@ import { useAccount, useReadContract, useWriteContract, useWaitForTransactionRec
 import { KYB_REGISTRY_ABI, KYBData } from '@/lib/abis/KYBRegistry'
 import { getContractAddress } from '@/lib/contracts'
 import { mantleSepoliaTestnet } from '@/lib/chains'
-import { useMemo, useEffect } from 'react'
+import { useMemo, useEffect, useState } from 'react'
 
 export { KYBStatus } from '@/lib/abis/KYBRegistry'
 
 export function useKYBRegistry() {
   const { address } = useAccount()
   const chainId = mantleSepoliaTestnet.id
+
+  // Local state to track if user has submitted KYB (stored in localStorage)
+  const [localPendingKYB, setLocalPendingKYB] = useState<boolean>(false)
+
+  // Check localStorage for pending KYB status on mount
+  useEffect(() => {
+    if (address) {
+      const storedStatus = localStorage.getItem(`kyb_pending_${address.toLowerCase()}`)
+      setLocalPendingKYB(storedStatus === 'true')
+    }
+  }, [address])
 
   // Read: Check if KYB is valid (verified and not expired)
   const { data: isValid, isLoading: isCheckingValidity, refetch: refetchValidity, error: validityError } = useReadContract({
@@ -47,55 +58,82 @@ export function useKYBRegistry() {
     },
   })
 
+  // We need to fetch individual pending requests to check if they belong to this user
+  // This is a workaround since we can't efficiently check all pending requests
+  const { data: userPendingRequest } = useReadContract({
+    address: getContractAddress(chainId, 'kybRegistry') as `0x${string}`,
+    abi: KYB_REGISTRY_ABI,
+    functionName: 'getRequest',
+    // Try to get a recent request ID - this is a hack for now
+    // In production, we'd need a better way to track user's request ID
+    args: pendingRequests && pendingRequests[0] ? [pendingRequests[0]] : undefined,
+    query: {
+      enabled: !!pendingRequests && pendingRequests.length > 0,
+      retry: false,
+    },
+  })
+
   // Check if user has a pending verification request
   const hasPendingRequest = useMemo(() => {
-    if (!pendingRequests || !address) return false
+    if (!userPendingRequest || !address) return false
 
-    // pendingRequests is an array of request IDs
-    // We need to fetch each request to check if it belongs to the user
-    // For now, just check if there are any pending requests
-    // In production, you'd want to fetch each request and check the businessWallet
-
-    return (pendingRequests as any[]).length > 0
-  }, [pendingRequests, address])
-
-  // Determine if user has submitted KYB (even if not yet approved)
-  // Check if kybData exists and status is not NONE
-  // Also check if error is NOT KYBNotFound (which means KYB exists but there's another error)
-  const hasKYB = useMemo(() => {
-    // If we have data, check the status
-    if (kybData) {
-      const status = (kybData as any).status
-      return status !== undefined && status !== 0 // 0 = NONE
-    }
-
-    // Check if user has a pending request (submitted but not approved)
-    if (hasPendingRequest) {
-      return true
-    }
-
-    // If we have an error but it's not KYBNotFound, it might mean KYB exists but there's another issue
-    // Check if the error message contains information about the KYB existing
-    if (dataError) {
-      const errorMessage = (dataError as any).message || dataError.toString() || ''
-
-      // Check if this is a KYBNotFound error
-      const isKYBNotFound = errorMessage.includes('KYBNotFound')
-
-      // If error is not KYBNotFound, assume KYB might exist
-      // This handles cases where the contract reverts for other reasons
-      if (!isKYBNotFound) {
-        return true // Assume KYB exists if it's a different error
-      } else {
-        // Even if KYBNotFound, check if there are pending requests
-        if (hasPendingRequest) {
-          return true
-        }
-      }
+    // Check if the pending request belongs to this user
+    const request = userPendingRequest as any
+    if (request && request.businessWallet) {
+      return request.businessWallet.toLowerCase() === address.toLowerCase() &&
+             request.requestStatus === 0 // 0 = PENDING
     }
 
     return false
-  }, [kybData, dataError, isLoadingData, address, hasPendingRequest])
+  }, [userPendingRequest, address])
+
+  // Determine if user has submitted KYB (even if not yet approved)
+  // Check if kybData exists and status is not NONE
+  const hasKYB = useMemo(() => {
+    // First check localStorage for pending status (set when user submits KYB)
+    if (localPendingKYB) {
+      console.log('📋 User has pending KYB (from localStorage)')
+      return true
+    }
+
+    // Then check if user has a pending request in the contract
+    if (hasPendingRequest) {
+      console.log('📋 User has pending KYB request (from contract)')
+      return true
+    }
+
+    // If we have data, check the status
+    if (kybData) {
+      const status = (kybData as any).status
+      // Status 0 = NONE means no KYB submitted
+      const hasSubmitted = status !== undefined && status !== 0
+
+      // If KYB is approved, clear the localStorage flag
+      if (hasSubmitted && status > 0 && localPendingKYB) {
+        localStorage.removeItem(`kyb_pending_${address?.toLowerCase()}`)
+        setLocalPendingKYB(false)
+      }
+
+      return hasSubmitted
+    }
+
+    // If we have an error, check if it's KYBNotFound
+    if (dataError) {
+      const errorMessage = (dataError as any).message || dataError.toString() || ''
+
+      // If it's KYBNotFound error, user has not submitted KYB
+      if (errorMessage.includes('KYBNotFound')) {
+        return false
+      }
+
+      // For other errors, we can't determine the state
+      // Default to false to be safe
+      return false
+    }
+
+    // No data and no error means still loading or no KYB
+    return false
+  }, [kybData, dataError, address, hasPendingRequest, localPendingKYB])
 
   // Write: Submit KYB
   const {
@@ -105,12 +143,49 @@ export function useKYBRegistry() {
     error: submitError,
   } = useWriteContract()
 
-  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+  const { isLoading: isConfirming, isSuccess: isConfirmed, isError: txError, error: txErrorDetails } = useWaitForTransactionReceipt({
     hash: submitHash,
-    query: {
-      enabled: !!submitHash,
-    },
+    timeout: 60_000, // 60 second timeout
   })
+
+  // Log transaction state for debugging
+  useEffect(() => {
+    if (submitHash) {
+      console.log('📝 KYB Transaction submitted:', submitHash)
+      console.log('Transaction status:', {
+        isSubmitting,
+        isConfirming,
+        isConfirmed,
+        hasError: txError || !!submitError
+      })
+    }
+  }, [submitHash, isSubmitting, isConfirming, isConfirmed, txError, submitError])
+
+  useEffect(() => {
+    if (isConfirmed && address) {
+      console.log('✅ KYB Transaction confirmed successfully!')
+      // Store in localStorage that this user has pending KYB
+      localStorage.setItem(`kyb_pending_${address.toLowerCase()}`, 'true')
+      setLocalPendingKYB(true)
+    }
+  }, [isConfirmed, address])
+
+  useEffect(() => {
+    if (txError && txErrorDetails) {
+      console.error('❌ KYB Transaction error:', {
+        message: txErrorDetails.message,
+        name: txErrorDetails.name,
+        cause: txErrorDetails.cause
+      })
+    }
+    if (submitError) {
+      console.error('❌ KYB Submit error:', {
+        message: submitError.message,
+        name: submitError.name,
+        cause: submitError.cause
+      })
+    }
+  }, [txError, txErrorDetails, submitError])
 
   // Auto-refetch KYB data when transaction is confirmed
   useEffect(() => {
@@ -165,7 +240,7 @@ export function useKYBRegistry() {
     isSubmissionConfirmed: isConfirmed,
 
     // Errors
-    submitError,
+    submitError: submitError || txErrorDetails,
     validityError,
     dataError, // Exporting dataError so components can check the error
 

@@ -2,7 +2,7 @@ import { useAccount, useReadContract, useWriteContract, useWaitForTransactionRec
 import { BUSINESS_REGISTRY_ABI, Business, BusinessStatus } from '@/lib/abis/BusinessRegistry'
 import { getContractAddress } from '@/lib/contracts'
 import { mantleSepoliaTestnet } from '@/lib/chains'
-import { useMemo } from 'react'
+import { useMemo, useEffect } from 'react'
 
 export function useBusinessRegistry() {
   const { address } = useAccount()
@@ -51,9 +51,53 @@ export function useBusinessRegistry() {
     error: registerError,
   } = useWriteContract()
 
-  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+  const {
+    isLoading: isConfirming,
+    isSuccess: isConfirmed,
+    isError: txError,
+    error: txErrorDetails
+  } = useWaitForTransactionReceipt({
     hash: registerHash,
+    timeout: 60_000, // 60 second timeout
   })
+
+  // Log transaction states for debugging
+  useEffect(() => {
+    if (registerHash) {
+      console.log('Transaction submitted:', registerHash)
+      console.log('Transaction status:', {
+        isRegistering,
+        isConfirming,
+        isConfirmed,
+        txError: txError ? 'Error occurred' : 'No error'
+      })
+    }
+  }, [registerHash, isRegistering, isConfirming, isConfirmed, txError])
+
+  useEffect(() => {
+    if (isConfirmed) {
+      console.log('✅ Transaction confirmed successfully!')
+    }
+  }, [isConfirmed])
+
+  useEffect(() => {
+    if (txError && txErrorDetails) {
+      console.error('❌ Transaction error details:', {
+        message: txErrorDetails.message,
+        name: txErrorDetails.name,
+        cause: txErrorDetails.cause,
+        full: txErrorDetails
+      })
+    }
+    if (registerError) {
+      console.error('❌ Write contract error:', {
+        message: registerError.message,
+        name: registerError.name,
+        cause: registerError.cause,
+        full: registerError
+      })
+    }
+  }, [txError, txErrorDetails, registerError])
 
   const handleRegisterBusiness = async (
     businessHash: `0x${string}`,
@@ -84,7 +128,7 @@ export function useBusinessRegistry() {
     isRegistrationConfirmed: isConfirmed,
 
     // Errors
-    registerError,
+    registerError: registerError || txErrorDetails,
     registrationCheckError,
     businessInfoError,
 

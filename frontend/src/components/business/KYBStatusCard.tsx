@@ -1,12 +1,13 @@
 'use client'
 
 import { useKYBRegistry, KYBStatus } from '@/hooks/useKYBRegistry'
+import { useBusinessRegistry } from '@/hooks/useBusinessRegistry'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Shield, CheckCircle, XCircle, Clock, AlertCircle, RefreshCw } from 'lucide-react'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 const statusConfig = {
   [KYBStatus.NONE]: {
@@ -74,18 +75,33 @@ function ActivityIndicator() {
 
 export function KYBStatusCard() {
   const { isValid, hasKYB, kybData, isCheckingValidity, isLoadingData, refetchData, refetchValidity, dataError } = useKYBRegistry()
+  const { businessInfo, isLoadingInfo, refetchBusinessInfo } = useBusinessRegistry()
   const [isRefreshing, setIsRefreshing] = useState(false)
 
   const handleRefresh = async () => {
     setIsRefreshing(true)
     try {
-      await Promise.all([refetchData(), refetchValidity()])
+      await Promise.all([refetchData(), refetchValidity(), refetchBusinessInfo()])
     } finally {
       setTimeout(() => setIsRefreshing(false), 500)
     }
   }
 
-  if (isCheckingValidity || isLoadingData) {
+  // Clear localStorage pending flag if business is verified
+  useEffect(() => {
+    if (businessInfo && businessInfo.status === 1) {
+      const address = businessInfo.owner?.toLowerCase()
+      if (address) {
+        const stored = localStorage.getItem(`kyb_pending_${address}`)
+        if (stored === 'true') {
+          console.log('✅ Business verified, clearing pending KYB flag from localStorage')
+          localStorage.removeItem(`kyb_pending_${address}`)
+        }
+      }
+    }
+  }, [businessInfo])
+
+  if (isCheckingValidity || isLoadingData || isLoadingInfo) {
     return (
       <Card className="overflow-hidden">
         <CardContent className="pt-6">
@@ -99,28 +115,49 @@ export function KYBStatusCard() {
     )
   }
 
-  // If hasKYB is true but kybData is undefined, assume PENDING status
-  // This handles the case where KYB exists but getKYBData returns an error
-  const status = kybData?.status ?? (hasKYB ? KYBStatus.PENDING : KYBStatus.NONE)
+  // Determine status: Check multiple sources
+  // Priority: 1. KYB data from KYBRegistry, 2. Business verification status from BusinessRegistry, 3. isValid flag, 4. hasKYB flag
+  const isBusinessVerified = businessInfo && businessInfo.status === 1 // BusinessStatus.VERIFIED = 1
+
+  let status: KYBStatus
+  if (kybData?.status !== undefined && kybData?.status !== KYBStatus.NONE) {
+    // Use KYB data if available
+    status = kybData.status
+  } else if (isBusinessVerified) {
+    // If business is verified in BusinessRegistry, treat KYB as verified
+    status = KYBStatus.VERIFIED
+  } else if (isValid) {
+    // If isKYBValid returns true
+    status = KYBStatus.VERIFIED
+  } else if (hasKYB) {
+    // If user has submitted KYB but not yet approved
+    status = KYBStatus.PENDING
+  } else {
+    // No KYB submitted yet
+    status = KYBStatus.NONE
+  }
+
   const config = statusConfig[status]
   const StatusIcon = config.icon
   const isPending = status === KYBStatus.PENDING
 
+  const isVerified = status === KYBStatus.VERIFIED || isBusinessVerified
+
   return (
     <Card className={`overflow-hidden transition-all duration-300 ${
-      isValid ? 'border-emerald-200 bg-gradient-to-br from-emerald-50/50 to-white' :
+      isVerified ? 'border-emerald-200 bg-gradient-to-br from-emerald-50/50 to-white' :
       isPending ? 'border-amber-200 bg-gradient-to-br from-amber-50/30 to-white' : ''
     }`}>
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className={`p-2.5 rounded-xl transition-all duration-300 ${
-              isValid ? 'bg-gradient-to-br from-emerald-100 to-emerald-50 shadow-sm' :
+              isVerified ? 'bg-gradient-to-br from-emerald-100 to-emerald-50 shadow-sm' :
               isPending ? 'bg-gradient-to-br from-amber-100 to-amber-50 shadow-sm' :
               'bg-slate-100'
             }`}>
               <Shield className={`w-6 h-6 transition-colors duration-300 ${
-                isValid ? 'text-emerald-600' :
+                isVerified ? 'text-emerald-600' :
                 isPending ? 'text-amber-600' :
                 'text-slate-600'
               }`} />
@@ -151,39 +188,61 @@ export function KYBStatusCard() {
         </div>
       </CardHeader>
       <CardContent>
-        {(kybData && status !== KYBStatus.NONE) || (hasKYB && !kybData) ? (
+        {(kybData && status !== KYBStatus.NONE) || (hasKYB && !kybData && !isValid) ? (
           <div className="space-y-4">
-            {kybData && kybData.businessType ? (
+            {(kybData && kybData.businessType) || isValid ? (
               <>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <span className="text-xs text-slate-500 uppercase tracking-wider">Business Type</span>
-                    <p className="text-sm font-semibold text-slate-900">{kybData.businessType}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-xs text-slate-500 uppercase tracking-wider">Level</span>
-                    <p className="text-sm font-semibold text-slate-900">
-                      {['None', 'Basic', 'Standard', 'Enhanced', 'Premium'][kybData.level || 0]}
-                    </p>
-                  </div>
-                </div>
+                {kybData && kybData.businessType ? (
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <span className="text-xs text-slate-500 uppercase tracking-wider">Business Type</span>
+                        <p className="text-sm font-semibold text-slate-900">{kybData.businessType}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-xs text-slate-500 uppercase tracking-wider">Level</span>
+                        <p className="text-sm font-semibold text-slate-900">
+                          {['None', 'Basic', 'Standard', 'Enhanced', 'Premium'][kybData.level || 0]}
+                        </p>
+                      </div>
+                    </div>
 
-                <div className="grid grid-cols-2 gap-4 pt-2 border-t border-slate-100">
-                  <div className="space-y-1">
-                    <span className="text-xs text-slate-500 uppercase tracking-wider">Verified</span>
-                    <p className="text-sm font-medium text-slate-700">
-                      {kybData.verifiedAt && kybData.verifiedAt > BigInt(0) ? new Date(Number(kybData.verifiedAt) * 1000).toLocaleDateString() : 'Pending'}
-                    </p>
-                  </div>
-                  {kybData.expiresAt && kybData.expiresAt > BigInt(0) && (
-                    <div className="space-y-1">
-                      <span className="text-xs text-slate-500 uppercase tracking-wider">Expires</span>
-                      <p className="text-sm font-medium text-slate-700">
-                        {new Date(Number(kybData.expiresAt) * 1000).toLocaleDateString()}
+                    <div className="grid grid-cols-2 gap-4 pt-2 border-t border-slate-100">
+                      <div className="space-y-1">
+                        <span className="text-xs text-slate-500 uppercase tracking-wider">Verified</span>
+                        <p className="text-sm font-medium text-slate-700">
+                          {kybData.verifiedAt && kybData.verifiedAt > BigInt(0) ? new Date(Number(kybData.verifiedAt) * 1000).toLocaleDateString() : 'Pending'}
+                        </p>
+                      </div>
+                      {kybData.expiresAt && kybData.expiresAt > BigInt(0) && (
+                        <div className="space-y-1">
+                          <span className="text-xs text-slate-500 uppercase tracking-wider">Expires</span>
+                          <p className="text-sm font-medium text-slate-700">
+                            {new Date(Number(kybData.expiresAt) * 1000).toLocaleDateString()}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  // Fallback when isValid is true but kybData is missing
+                  <div className="p-6 rounded-xl border-2 border-emerald-300/50 bg-gradient-to-br from-emerald-50 via-green-50/30 to-emerald-50">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="p-3 bg-gradient-to-br from-emerald-400 to-green-500 rounded-full">
+                        <CheckCircle className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-emerald-900">Verified</h3>
+                        <p className="text-xs text-emerald-700">Your business has been successfully verified</p>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-white/70 backdrop-blur-sm rounded-lg border border-emerald-200/50">
+                      <p className="text-sm text-emerald-900">
+                        ✅ You can now submit invoices for financing and access all platform features
                       </p>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </>
             ) : (
               // When hasKYB is true but kybData is undefined (pending approval)

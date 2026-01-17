@@ -332,7 +332,7 @@ export default function HistoryPage() {
                               <h3 className="font-semibold text-slate-900">
                                 {getTransactionLabel(tx.type)}
                               </h3>
-                              <Badge variant="outline" className="text-xs">
+                              <Badge className="text-xs">
                                 {tierInfo.name}
                               </Badge>
                             </div>

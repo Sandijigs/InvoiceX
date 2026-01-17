@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAccount } from 'wagmi'
 import { useKYBRegistry } from '@/hooks/useKYBRegistry'
 import { useBusinessRegistry } from '@/hooks/useBusinessRegistry'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -11,6 +12,17 @@ import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Shield, Loader2, CheckCircle, Upload, FileText, AlertCircle } from 'lucide-react'
 import { keccak256 } from 'viem'
+import { uploadFile, uploadJSON, storeBusinessMapping, getIPFSStatus } from '@/lib/ipfsService'
+
+// Type definition for document metadata
+type IPFSDocumentMetadata = {
+  name: string
+  type: string
+  size: number
+  hash: `0x${string}`
+  ipfsHash: string
+  uploadedAt: number
+}
 
 const JURISDICTIONS = [
   { code: 'US', name: 'United States' },
@@ -35,6 +47,7 @@ const BUSINESS_TYPES = [
 
 export function KYBSubmissionForm() {
   const router = useRouter()
+  const { address } = useAccount()
   const { submitKYB, isSubmitting, isSubmissionConfirmed, submitError, refetchValidity, refetchData } = useKYBRegistry()
   const { businessId, businessInfo } = useBusinessRegistry()
 
@@ -58,6 +71,10 @@ export function KYBSubmissionForm() {
     additionalDocs: null,
   })
 
+  const [documentMetadata, setDocumentMetadata] = useState<{[key: string]: IPFSDocumentMetadata}>({})
+  const [isUploadingToIPFS, setIsUploadingToIPFS] = useState(false)
+
+
   // Auto-redirect after successful submission
   useEffect(() => {
     if (isSubmissionConfirmed) {
@@ -74,6 +91,11 @@ export function KYBSubmissionForm() {
   const handleFileUpload = async (field: string, file: File | null) => {
     if (!file) {
       setUploadedFiles(prev => ({ ...prev, [field]: null }))
+      setDocumentMetadata(prev => {
+        const updated = { ...prev }
+        delete updated[field]
+        return updated
+      })
       setFormData(prev => ({
         ...prev,
         documents: { ...prev.documents, [field]: '' }
@@ -81,17 +103,40 @@ export function KYBSubmissionForm() {
       return
     }
 
-    // In production, upload to IPFS or encrypted storage
-    // For now, create a hash of the file content
-    const arrayBuffer = await file.arrayBuffer()
-    const bytes = new Uint8Array(arrayBuffer)
-    const hash = keccak256(bytes)
+    setIsUploadingToIPFS(true)
+    try {
+      // Create hash of file content for verification
+      const arrayBuffer = await file.arrayBuffer()
+      const bytes = new Uint8Array(arrayBuffer)
+      const hash = keccak256(bytes)
 
-    setUploadedFiles(prev => ({ ...prev, [field]: file }))
-    setFormData(prev => ({
-      ...prev,
-      documents: { ...prev.documents, [field]: hash }
-    }))
+      // Upload file to IPFS (Pinata or localStorage fallback)
+      console.log(`📤 Uploading ${file.name} to IPFS...`)
+      const ipfsCID = await uploadFile(file, { name: file.name })
+      console.log(`✅ Uploaded to IPFS: ${ipfsCID}`)
+
+      // Create document metadata with IPFS CID
+      const metadata: IPFSDocumentMetadata = {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        hash: hash,
+        ipfsHash: ipfsCID,
+        uploadedAt: Date.now()
+      }
+
+      setUploadedFiles(prev => ({ ...prev, [field]: file }))
+      setDocumentMetadata(prev => ({ ...prev, [field]: metadata }))
+      setFormData(prev => ({
+        ...prev,
+        documents: { ...prev.documents, [field]: hash }
+      }))
+    } catch (error) {
+      console.error('Error uploading file:', error)
+      alert(`Failed to upload ${file.name}. Please try again.`)
+    } finally {
+      setIsUploadingToIPFS(false)
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -99,6 +144,10 @@ export function KYBSubmissionForm() {
     try {
       if (!businessInfo?.businessHash) {
         throw new Error('Business not registered. Please register your business first.')
+      }
+
+      if (!address) {
+        throw new Error('Wallet not connected')
       }
 
       // Collect all document hashes as proof hashes
@@ -110,15 +159,47 @@ export function KYBSubmissionForm() {
         throw new Error('Please upload at least one document')
       }
 
+      // Upload document metadata to IPFS
+      const ipfsStatus = getIPFSStatus()
+      console.log('📤 Uploading metadata to IPFS...', ipfsStatus.message)
+      const metadataToUpload = {
+        businessAddress: address,
+        businessId: businessId?.toString() || '',
+        jurisdiction: formData.jurisdiction,
+        businessType: formData.businessType,
+        documents: documentMetadata,
+        submittedAt: Date.now(),
+        ipfsProvider: ipfsStatus.provider,
+        ipfsMetadataHash: '' // Will be filled after upload
+      }
+
+      const metadataIPFSHash = await uploadJSON(metadataToUpload, `kyb-${address}-${Date.now()}.json`)
+      console.log('✅ Metadata uploaded to IPFS:', metadataIPFSHash)
+
+      // Store the mapping: businessAddress -> IPFS CID
+      // This allows admin to find documents by business address
+      storeBusinessMapping(address, metadataIPFSHash)
+      console.log('✅ Stored IPFS mapping for admin access')
+
       // Submit KYB with business hash, proof hashes, jurisdiction, and business type
+      console.log('📝 Submitting KYB to blockchain:', {
+        businessHash: businessInfo.businessHash,
+        proofHashesCount: proofHashes.length,
+        jurisdiction: formData.jurisdiction,
+        businessType: formData.businessType
+      })
+
       await submitKYB(
         businessInfo.businessHash,
         proofHashes,
         formData.jurisdiction,
         formData.businessType
       )
+
+      console.log('✅ KYB submission initiated, waiting for confirmation...')
     } catch (error) {
-      console.error('KYB submission failed:', error)
+      console.error('❌ KYB submission failed:', error)
+      alert(`KYB submission failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
@@ -382,19 +463,27 @@ export function KYBSubmissionForm() {
             </div>
           </div>
 
+          {isUploadingToIPFS && (
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+              <p className="text-sm text-blue-900">Uploading files to IPFS...</p>
+            </div>
+          )}
+
           <div className="flex gap-3 pt-2">
             <Button
               type="button"
               variant="outline"
               onClick={() => router.push('/business')}
               className="flex-1 border-slate-300 hover:border-slate-400 hover:bg-slate-50 transition-all duration-200"
+              disabled={isSubmitting || isUploadingToIPFS}
             >
               Cancel
             </Button>
             <Button
               type="submit"
               className="flex-1 group relative overflow-hidden bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 hover:from-emerald-600 hover:via-emerald-700 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isUploadingToIPFS}
             >
               <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
               {isSubmitting ? (

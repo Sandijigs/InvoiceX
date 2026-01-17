@@ -1,0 +1,25 @@
+{
+  "network": "Mantle Sepolia",
+  "chainId": 5003,
+  "deploymentType": "Quick Test",
+  "deployer": "0xeEA4353FE0641fA7730e1c9Bc7cC0f969ECd5914",
+  "deploymentDate": "2026-01-07T11:24:00Z",
+  "contracts": {
+    "mockUSDT": {
+      "address": "0xfee2B3154eA75bA762601e816EDbaBb75920Fa47",
+      "txHash": "0xe20a8e18ba5dbf86801504dc7cbac0d265a6515bac8ca2c191720401f44ddc6e",
+      "blockNumber": 33122698
+    },
+    "invoiceToken": {
+      "address": "0xf596c189E0CBAa526F4Dd94294355057EEC8dB55",
+      "txHash": "0x713bdfdf88c036206c151482214ea26b92ae1d36f6b41d007f1c9a43ce76e333",
+      "blockNumber": 33122707
+    }
+  },
+  "gasUsed": {
+    "totalGas": "9938935542",
+    "totalCost": "0.1997726043942 MNT",
+    "gasPrice": "0.0201 gwei"
+  },
+  "blockExplorer": "https://explorer.sepolia.mantle.xyz"
+}

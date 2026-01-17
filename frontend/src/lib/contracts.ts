@@ -1,34 +1,34 @@
 // Contract addresses from the successful deployment
-// Using Mantle Sepolia by default
+// Using Mantle Sepolia - Updated from deployments/mantle-sepolia-full.json
 export const CONTRACTS = {
-  MockUSDT: '0x730116Ded8eDB4c6f5Eae19f549D8129cd2cDe5D' as `0x${string}`,
-  InvoiceToken: '0x1666095Ee7ce94d92A09e1A120446cB10D62368F' as `0x${string}`,
-  InvoiceXCore: '0x673FBa3576d4AF2ae3a2FFC93780877CeEAD42C2' as `0x${string}`,
-  BusinessRegistry: '0xa08Ae8c611737021d80e19231CF7c5602092d22A' as `0x${string}`,
-  BuyerRegistry: '0x979D45817d636a01F31eDaEb2043dF5edFa67D1A' as `0x${string}`,
-  KYBRegistry: '0x00057f627Ba4c038c9a721448041F81392b72139' as `0x${string}`,
-  CreditOracle: '0xD75273b57c135300A5D82b48042bCec9aa7C4C4B' as `0x${string}`,
-  LiquidityPool: '0xEc98b4be3aa5f55B418E07E2895cb316364318cC' as `0x${string}`,
-  YieldDistributor: '0x7474a38BA2028382169F989B5B1f055c1cCaF413' as `0x${string}`,
-  InsurancePool: '0xc56e14bF5D9944A67AaE32Af6d46ed8Cb7d98AAB' as `0x${string}`,
-  InvoiceMarketplace: '0xC9443C35e6aCACB6F3c8341af3465cD270aDd5E9' as `0x${string}`,
+  mockUSDT: '0x5aAdFB43eF8dAF45DD80F4676345b7676f1D70e3' as `0x${string}`,
+  invoiceToken: '0x0dA7A699bA5881Be099caD405E49BDF94C3E31a5' as `0x${string}`,
+  invoiceXCore: '0xd67BA7f3fbae1c3B9Ad55c56274e47c859e6d301' as `0x${string}`,
+  businessRegistry: '0xEe1fFe183002c22607E84A335d29fa2E94538ffc' as `0x${string}`,
+  buyerRegistry: '0x554dc44df2AA9c718F6388ef057282893f31C04C' as `0x${string}`,
+  kybRegistry: '0x7d6FfE6Bae45120cdf907026A6757DbE633d7a50' as `0x${string}`,
+  creditOracle: '0x4E0C6E13eAee2C879D075c285b31272AE6b3967C' as `0x${string}`,
+  liquidityPool: '0x605F80DcFd708465474E9D130b5c06202e79e2c6' as `0x${string}`,
+  yieldDistributor: '0xCB5d6d80535a5F50f33C457eEf4ca2E9F712E864' as `0x${string}`,
+  insurancePool: '0x99907915Ef1836a00ce88061B75B2cfC4537B5A6' as `0x${string}`,
+  invoiceMarketplace: '0x35b95450Eaab790de5a8067064B9ce75a57d4d8f' as `0x${string}`,
 }
 
 // Legacy structure for backwards compatibility
 export const CONTRACTS_BY_CHAIN = {
   mantleSepolia: CONTRACTS,
   mantleMainnet: {
-    MockUSDT: '' as `0x${string}`,
-    InvoiceToken: '' as `0x${string}`,
-    InvoiceXCore: '' as `0x${string}`,
-    BusinessRegistry: '' as `0x${string}`,
-    BuyerRegistry: '' as `0x${string}`,
-    KYBRegistry: '' as `0x${string}`,
-    CreditOracle: '' as `0x${string}`,
-    LiquidityPool: '' as `0x${string}`,
-    YieldDistributor: '' as `0x${string}`,
-    InsurancePool: '' as `0x${string}`,
-    InvoiceMarketplace: '' as `0x${string}`,
+    mockUSDT: '' as `0x${string}`,
+    invoiceToken: '' as `0x${string}`,
+    invoiceXCore: '' as `0x${string}`,
+    businessRegistry: '' as `0x${string}`,
+    buyerRegistry: '' as `0x${string}`,
+    kybRegistry: '' as `0x${string}`,
+    creditOracle: '' as `0x${string}`,
+    liquidityPool: '' as `0x${string}`,
+    yieldDistributor: '' as `0x${string}`,
+    insurancePool: '' as `0x${string}`,
+    invoiceMarketplace: '' as `0x${string}`,
   }
 }
 

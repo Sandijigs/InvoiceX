@@ -12,19 +12,12 @@ export const config = createConfig({
     }),
   ],
   transports: {
-    // Use fallback with multiple RPC endpoints and longer timeout
-    [mantleSepoliaTestnet.id]: fallback([
-      http('https://rpc.sepolia.mantle.xyz', {
-        timeout: 30_000, // 30 seconds
-        retryCount: 3,
-        retryDelay: 1000,
-      }),
-      http('https://rpc.testnet.mantle.xyz', {
-        timeout: 30_000,
-        retryCount: 3,
-        retryDelay: 1000,
-      }),
-    ]),
+    // Use primary RPC endpoint for Mantle Sepolia
+    [mantleSepoliaTestnet.id]: http('https://rpc.sepolia.mantle.xyz', {
+      timeout: 60_000, // 60 seconds for transaction confirmations
+      retryCount: 5,
+      retryDelay: 2000,
+    }),
     [mantleMainnet.id]: fallback([
       http('https://rpc.mantle.xyz', {
         timeout: 30_000,

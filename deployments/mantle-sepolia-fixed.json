@@ -1,0 +1,65 @@
+{
+  "network": "Mantle Sepolia",
+  "chainId": 5003,
+  "deploymentType": "Fixed - Consistent USDT",
+  "deployer": "0xeEA4353FE0641fA7730e1c9Bc7cC0f969ECd5914",
+  "deploymentDate": "2026-01-08T00:00:00Z",
+  "contracts": {
+    "mockUSDT": {
+      "address": "0x730116Ded8eDB4c6f5Eae19f549D8129cd2cDe5D",
+      "description": "Mock USDT with 10M minted to deployer"
+    },
+    "invoiceToken": {
+      "address": "0x1666095Ee7ce94d92A09e1A120446cB10D62368F",
+      "description": "ERC-721 NFT for tokenized invoices"
+    },
+    "invoiceXCore": {
+      "address": "0x673FBa3576d4AF2ae3a2FFC93780877CeEAD42C2",
+      "description": "Main protocol orchestrator"
+    },
+    "businessRegistry": {
+      "address": "0xa08Ae8c611737021d80e19231CF7c5602092d22A",
+      "description": "Business/Seller registration"
+    },
+    "buyerRegistry": {
+      "address": "0x979D45817d636a01F31eDaEb2043dF5edFa67D1A",
+      "description": "Buyer registration and credit tracking"
+    },
+    "kybRegistry": {
+      "address": "0x00057f627Ba4c038c9a721448041F81392b72139",
+      "description": "KYB/KYC compliance management"
+    },
+    "creditOracle": {
+      "address": "0xD75273b57c135300A5D82b48042bCec9aa7C4C4B",
+      "description": "AI-powered credit risk assessment"
+    },
+    "liquidityPool": {
+      "address": "0xEc98b4be3aa5f55B418E07E2895cb316364318cC",
+      "description": "Three-tiered investment pools"
+    },
+    "yieldDistributor": {
+      "address": "0x7474a38BA2028382169F989B5B1f055c1cCaF413",
+      "description": "Yield distribution to liquidity providers"
+    },
+    "insurancePool": {
+      "address": "0xc56e14bF5D9944A67AaE32Af6d46ed8Cb7d98AAB",
+      "description": "Default protection for investors"
+    },
+    "invoiceMarketplace": {
+      "address": "0xC9443C35e6aCACB6F3c8341af3465cD270aDd5E9",
+      "description": "Secondary market for invoice tokens"
+    }
+  },
+  "poolsInitialized": {
+    "TIER_A": "10% APY, Min: 10 USDT, Max: 10,000 USDT",
+    "TIER_B": "17.5% APY, Min: 10 USDT, Max: 10,000 USDT",
+    "TIER_C": "26% APY, Min: 10 USDT, Max: 10,000 USDT"
+  },
+  "gasUsed": {
+    "totalGas": "85149398299",
+    "totalCost": "1.7115029058099 MNT",
+    "gasPrice": "0.0201 gwei",
+    "totalTransactions": 24
+  },
+  "blockExplorer": "https://explorer.sepolia.mantle.xyz"
+}

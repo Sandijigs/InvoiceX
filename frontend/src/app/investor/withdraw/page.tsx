@@ -336,7 +336,7 @@ export default function WithdrawPage() {
                         min="0"
                       />
                       <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                        <Badge variant="outline" className="font-semibold">
+                        <Badge className="font-semibold">
                           {withdrawType === 'amount' ? 'USDT' : 'SHARES'}
                         </Badge>
                       </div>

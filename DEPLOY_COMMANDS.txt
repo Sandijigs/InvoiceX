@@ -1,0 +1,42 @@
+InvoiceX - Deployment Commands for Mantle Sepolia
+==================================================
+
+IMPORTANT: The DeployMantle.s.sol script had errors and has been removed.
+Use DeployInvoiceX.s.sol which has the correct constructor arguments.
+
+Step 1: Clean and Rebuild
+--------------------------
+forge clean
+forge build
+
+This will take 2-3 minutes due to via_ir optimization.
+Wait for "Compiler run successful!"
+
+Step 2: Deploy to Mantle Sepolia
+---------------------------------
+forge script script/DeployInvoiceX.s.sol:DeployInvoiceX \
+    --rpc-url https://rpc.sepolia.mantle.xyz \
+    --broadcast \
+    --slow \
+    --legacy \
+    -vvv
+
+Step 3: Save Contract Addresses
+--------------------------------
+The deployment will show all addresses. Save them to deployments/mantle-sepolia.json
+
+Alternative: Quick Test (2 contracts only)
+-------------------------------------------
+forge script script/QuickDeploy.s.sol:QuickDeploy \
+    --rpc-url https://rpc.sepolia.mantle.xyz \
+    --broadcast \
+    --slow \
+    --legacy \
+    -vvv
+
+Your Configuration:
+-------------------
+Network: Mantle Sepolia
+Deployer: 0xeEA4353FE0641fA7730e1c9Bc7cC0f969ECd5914
+Balance: 20 MNT
+Private Key: Already in .env

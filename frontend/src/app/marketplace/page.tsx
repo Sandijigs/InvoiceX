@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useAccount } from 'wagmi'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
@@ -9,22 +9,27 @@ import { Search, Filter, TrendingUp, ShoppingBag } from 'lucide-react'
 import { ListingGrid } from '@/components/marketplace/ListingGrid'
 import { useMarketplace } from '@/hooks/useMarketplace'
 import { useListings } from '@/hooks/useListing'
-import { type Listing, ListingStatus } from '@/lib/abis/InvoiceMarketplace'
+import { MOCK_LISTINGS, USE_MOCK_DATA } from '@/lib/mockMarketplaceData'
 import Link from 'next/link'
 
 export default function MarketplacePage() {
-  const { address, isConnected } = useAccount()
+  const { isConnected } = useAccount()
   const { activeListingIds, isLoadingListings, buyNow, isLoading } = useMarketplace()
-  const { listings: allListings, isLoading: isLoadingListingData } = useListings(activeListingIds)
+  const { listings: realListings, isLoading: isLoadingListingData } = useListings(activeListingIds)
 
   const [searchQuery, setSearchQuery] = useState('')
-  const [filteredListings, setFilteredListings] = useState<Listing[]>([])
+
+  // Use mock data if enabled or if no real listings exist
+  const allListings = useMemo(() => {
+    if (USE_MOCK_DATA && realListings.length === 0) {
+      return MOCK_LISTINGS
+    }
+    return realListings
+  }, [realListings])
 
   // Filter listings based on search
-  useEffect(() => {
-    if (!allListings) return
-
-    const filtered = allListings.filter((listing) => {
+  const filteredListings = useMemo(() => {
+    return allListings.filter((listing) => {
       if (searchQuery) {
         const query = searchQuery.toLowerCase()
         return (
@@ -34,8 +39,6 @@ export default function MarketplacePage() {
       }
       return true
     })
-
-    setFilteredListings(filtered)
   }, [allListings, searchQuery])
 
   const handleBuyNow = async (listingId: bigint) => {

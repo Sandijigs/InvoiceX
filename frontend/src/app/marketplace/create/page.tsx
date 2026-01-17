@@ -188,8 +188,8 @@ export default function CreateListingPage() {
                     </p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground">Days Until Due</p>
-                    <p className="font-medium">{invoice.isOverdue ? 'Overdue' : `${invoice.daysUntilDue} days`}</p>
+                    <p className="text-muted-foreground">Due Date</p>
+                    <p className="font-medium">{invoice.dueDate}</p>
                   </div>
                 </div>
               </div>

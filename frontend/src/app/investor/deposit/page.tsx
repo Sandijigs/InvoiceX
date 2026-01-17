@@ -359,7 +359,7 @@ export default function DepositPage() {
                       min="0"
                     />
                     <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                      <Badge variant="outline" className="font-semibold">USDT</Badge>
+                      <Badge className="font-semibold">USDT</Badge>
                     </div>
                   </div>
 
@@ -489,7 +489,7 @@ export default function DepositPage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-slate-600">Risk Level</span>
-                  <Badge variant="outline">{tierInfo.riskLevel}</Badge>
+                  <Badge>{tierInfo.riskLevel}</Badge>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-slate-600">Min Deposit</span>

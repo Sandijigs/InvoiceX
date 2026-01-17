@@ -48,9 +48,9 @@ export function ListingCard({ listing, onBuyNow, isLoading }: ListingCardProps) 
       case ListingStatus.SOLD:
         return <Badge className="bg-blue-500">Sold</Badge>
       case ListingStatus.CANCELLED:
-        return <Badge variant="destructive">Cancelled</Badge>
+        return <Badge>Cancelled</Badge>
       case ListingStatus.EXPIRED:
-        return <Badge variant="secondary">Expired</Badge>
+        return <Badge>Expired</Badge>
       default:
         return null
     }

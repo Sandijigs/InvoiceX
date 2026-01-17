@@ -4,6 +4,7 @@ import { useReadContract } from 'wagmi'
 import { INVOICE_TOKEN_ABI } from '@/lib/abis/InvoiceToken'
 import { CONTRACTS } from '@/lib/contracts'
 import { formatUnits } from 'viem'
+import { MOCK_INVOICE_DATA } from '@/lib/mockMarketplaceData'
 
 // Invoice Status Enum
 export enum InvoiceStatus {
@@ -43,7 +44,10 @@ export function useInvoice(tokenId?: bigint) {
     },
   })
 
-  // Parse invoice data
+  // Check for mock data if no real data available
+  const mockData = tokenId ? MOCK_INVOICE_DATA[tokenId.toString()] : null
+
+  // Parse invoice data (use mock data if real data not available)
   const invoice = invoiceData
     ? {
         invoiceNumber: (invoiceData as any)[0] as string,
@@ -55,6 +59,18 @@ export function useInvoice(tokenId?: bigint) {
         status: (invoiceData as any)[6] as InvoiceStatus,
         advanceAmount: (invoiceData as any)[7] as bigint,
         ipfsHash: (invoiceData as any)[8] as string,
+      }
+    : mockData
+    ? {
+        invoiceNumber: mockData.invoiceNumber,
+        issuer: '0x0000000000000000000000000000000000000000',
+        buyer: '0x0000000000000000000000000000000000000000',
+        amount: BigInt(mockData.amount * 1e6), // Convert to USDT units
+        dueDate: mockData.dueDate,
+        issueDate: BigInt(Math.floor(Date.now() / 1000)),
+        status: mockData.status,
+        advanceAmount: BigInt(0),
+        ipfsHash: 'mock-ipfs-hash',
       }
     : null
 
@@ -111,7 +127,7 @@ export function useInvoice(tokenId?: bigint) {
           amount: Number(formatAmount(invoice.amount)),
           advanceAmount: Number(formatAmount(invoice.advanceAmount)),
           statusText: getStatusText(invoice.status),
-          businessName: 'Business Name', // TODO: Fetch from BusinessRegistry
+          businessName: mockData?.businessName || 'Business Name', // Use mock data business name if available
         }
       : null,
     owner: owner as string,

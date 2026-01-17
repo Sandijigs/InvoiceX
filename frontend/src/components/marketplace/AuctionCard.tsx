@@ -67,9 +67,9 @@ export function AuctionCard({ auction, onPlaceBid, isLoading }: AuctionCardProps
       case AuctionStatus.ENDED_WITH_SALE:
         return <Badge className="bg-blue-500">Sold</Badge>
       case AuctionStatus.ENDED_NO_SALE:
-        return <Badge variant="secondary">Not Sold</Badge>
+        return <Badge>Not Sold</Badge>
       case AuctionStatus.CANCELLED:
-        return <Badge variant="destructive">Cancelled</Badge>
+        return <Badge>Cancelled</Badge>
       default:
         return null
     }
@@ -106,7 +106,7 @@ export function AuctionCard({ auction, onPlaceBid, isLoading }: AuctionCardProps
             <p className="text-xs text-muted-foreground">Reserve Price</p>
             <p className="font-semibold text-sm">{formatPrice(auction.reservePrice)}</p>
             {reserveMet && hasBids && (
-              <Badge variant="secondary" className="mt-1 text-xs bg-green-100 text-green-700">
+              <Badge className="mt-1 text-xs bg-green-100 text-green-700">
                 Reserve Met
               </Badge>
             )}

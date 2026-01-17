@@ -30,6 +30,41 @@ export const KYB_REGISTRY_ABI = [
     outputs: []
   },
 
+  // Admin Functions
+  {
+    type: 'function',
+    name: 'approveKYB',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'requestId', type: 'uint256' },
+      { name: 'level', type: 'uint8' },
+      {
+        name: 'flags',
+        type: 'tuple',
+        components: [
+          { name: 'businessRegistration', type: 'bool' },
+          { name: 'revenueThreshold', type: 'bool' },
+          { name: 'operatingHistory', type: 'bool' },
+          { name: 'bankAccountVerified', type: 'bool' },
+          { name: 'noLiens', type: 'bool' },
+          { name: 'goodStanding', type: 'bool' }
+        ]
+      },
+      { name: 'validityDays', type: 'uint256' }
+    ],
+    outputs: []
+  },
+  {
+    type: 'function',
+    name: 'rejectKYB',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'requestId', type: 'uint256' },
+      { name: 'reason', type: 'string' }
+    ],
+    outputs: []
+  },
+
   // Renewal Functions
   {
     type: 'function',

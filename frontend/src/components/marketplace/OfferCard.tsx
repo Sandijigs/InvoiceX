@@ -50,11 +50,11 @@ export function OfferCard({ offer, onAccept, onReject, onCancel, isLoading, user
       case OfferStatus.ACCEPTED:
         return <Badge className="bg-green-500">Accepted</Badge>
       case OfferStatus.REJECTED:
-        return <Badge variant="destructive">Rejected</Badge>
+        return <Badge>Rejected</Badge>
       case OfferStatus.CANCELLED:
-        return <Badge variant="secondary">Cancelled</Badge>
+        return <Badge>Cancelled</Badge>
       case OfferStatus.EXPIRED:
-        return <Badge variant="secondary">Expired</Badge>
+        return <Badge>Expired</Badge>
       default:
         return null
     }
